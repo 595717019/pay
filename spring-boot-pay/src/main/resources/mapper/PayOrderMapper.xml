@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itstyle.database.mapper.PayOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.itstyle.database.domain.po.PayOrder">
+        <result column="orderid" property="orderid"/>
+        <result column="mchid" property="mchid"/>
+        <result column="outtradeno" property="outtradeno"/>
+        <result column="channelid" property="channelid"/>
+        <result column="totalfee" property="totalfee"/>
+        <result column="status" property="status"/>
+        <result column="clientip" property="clientip"/>
+        <result column="payway" property="payway"/>
+        <result column="subject" property="subject"/>
+        <result column="body" property="body"/>
+        <result column="extra" property="extra"/>
+        <result column="errcode" property="errcode"/>
+        <result column="errmsg" property="errmsg"/>
+        <result column="param1" property="param1"/>
+        <result column="param2" property="param2"/>
+        <result column="notifyurl" property="notifyurl"/>
+        <result column="notifycount" property="notifycount"/>
+        <result column="lastnotifytime" property="lastnotifytime"/>
+        <result column="expiretime" property="expiretime"/>
+        <result column="paysucctime" property="paysucctime"/>
+        <result column="createtime" property="createtime"/>
+        <result column="updatetime" property="updatetime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        orderid, mchid, outtradeno, channelid, totalfee, status, clientip, payway, subject, body, extra, errcode, errmsg, param1, param2, notifyurl, notifycount, lastnotifytime, expiretime, paysucctime, createtime, updatetime
+    </sql>
+
+    <select id="listAll" resultMap="BaseResultMap">
+        select * from pay_order
+        order by createtime desc;
+    </select>
+
+    <select id="payinfo" parameterType="String" resultType="java.util.HashMap">
+        select * from pay_info i
+        join pay_channel c
+          on i.payid = c.payid
+        where paytype = #{payType}::int and c.state = 1
+    </select>
+
+    <insert id="insert" parameterType="com.itstyle.common.model.Product">
+        insert into pay_order (orderId, mchid, outTradeNo, channelid, totalFee,
+            status, clientip, payWay, subject, body,payid,
+            extra, errcode, errmsg, param1, param2,
+            notifyurl, notifycount, lastnotifytime, expiretime, paysucctime, createtime, updatetime)
+        VALUES (#{outTradeNo}, #{mchid}, #{outTradeNo}, (select channelid from pay_channel where mchid = #{mchid} and payid = #{payId}::int), #{totalFee},
+            #{status}, #{spbillCreateIp}, #{payWay}, #{subject}, #{body},#{payId},
+            '', '', '', '', '',
+            '', 1, now(), now(), now(), now(),now())
+    </insert>
+
+    <!-- 扫码付回调函数中的更新 -->
+    <update id="update" parameterType="java.util.HashMap">
+        update pay_order
+        set lastnotifytime=now()
+        ,paysucctime=#{pay_time}::timestamp
+        ,status=2
+        ,recfeeamt=#{recfeeamt}::decimal
+        ,recfeerate=#{recfeerate}::decimal
+        ,updatetime=now()
+        where outTradeNo=#{order_id}
+    </update>
+
+    <!-- 更新订单状态 -->
+    <update id="updateOrderStatus" parameterType="java.util.HashMap">
+        update pay_order
+        set status=#{status}::int
+        ,updatetime=now()
+        where outTradeNo=#{outTradeNo}
+    </update>
+
+    <!-- 订单检索 -->
+    <select id="getOrderList" resultType="com.itstyle.database.domain.dto.OrderDTO">
+        SELECT
+        po.mchid
+        ,mi.mchname
+        ,po.outtradeno
+        ,po.status
+        ,case po.status
+        when 0 then '支付中'
+        when 1 then ''
+        when 2 then '成功'
+        when 3 then '已退款'
+        else '失败'
+        end as statusname
+        , to_char(po.createtime,'YYYY-MM-DD HH24:MI:SS') as createtime
+        ,po.totalfee
+        ,pc.channelid
+        ,pi.paytype
+        ,case
+        when pc.payid =1 and pi.paytype = 1 then '支付宝'
+        when pc.payid =2 and pi.paytype = 2 then '微信'
+        when pc.payid =3 and pi.paytype = 1 then 'Xorpay支付宝'
+        when pc.payid =4 and pi.paytype = 2 then 'Xorpay微信'
+        when pc.payid =5 and pi.paytype = 1 then '随行付支付宝'
+        when pc.payid =6 and pi.paytype = 2 then '随行付微信'
+        when pc.payid =7 and pi.paytype = 3 then '随行付银联'
+        end as payname
+        ,pc.payid
+        ,case
+        when pc.payid =1 then '支付宝'
+        when pc.payid =2 then '微信'
+        when pc.payid =3 then 'Xorpay'
+        when pc.payid =4 then 'Xorpay'
+        when pc.payid =5 then '随行付'
+        when pc.payid =6 then '随行付'
+        when pc.payid =7 then '随行付'
+        end as paytypename
+        ,po.recfeeamt,po.recfeerate
+        FROM pay_order po
+        LEFT JOIN pay_channel pc ON po.mchid=pc.mchid and po.channelid = pc.channelid
+        LEFT JOIN pay_info pi ON pc.payid=pi.payid
+        LEFT JOIN mch_info mi ON po.mchid=mi.mchid
+        WHERE 1=1
+        <if test="mchid != null and mchid != ''">
+            AND po.mchid=#{mchid}
+        </if>
+        <if test="mchname != null and mchname != ''">
+            AND mi.mchname like '%'||#{mchname}||'%'
+        </if>
+        <if test="payid != null and payid != ''">
+            AND pi.payid=#{payid}::int
+        </if>
+        <if test="outtradeno != null and outtradeno != ''">
+            AND po.outtradeno=#{outtradeno}
+        </if>
+        <if test="status != null and status != ''">
+            AND po.status=#{status}::int
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char(po.createtime,'yyyy-mm-dd') BETWEEN #{starttime} AND #{endtime}
+        </if>
+        <if test="payid != null and payid != '' and paytype != null and paytype != ''">
+            AND pi.paytype=#{paytype}::int
+        </if>
+        order by po.createtime desc
+    </select>
+
+    <!-- 支付渠道列表 -->
+    <select id="getChannelList" resultType="java.util.HashMap">
+        SELECT payid as id,descript as name
+        FROM pay_info
+        ORDER BY payid
+    </select>
+    <!-- 更新支付渠道状态 -->
+    <update id="updateChannelStatus" parameterType="java.util.HashMap">
+        update pay_channel
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="state =case" suffix="end,">
+                <foreach collection="payChannels" item="item" index="index">
+                    <if test="item.state != null">
+                        when channelid=#{item.channelid} then #{item.state}
+                    </if>
+                    <if test="item.state == null">
+                        when channelid=#{item.channelid} then pay_channel.state
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,updatetime=now()
+        where channelid in
+        <foreach collection="payChannels" index="index" item="item" separator="," open="(" close=")">
+            #{item.channelid,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <!-- 条码付，更新交易手续费和交易手续费费率 -->
+    <update id="updateRecfee" parameterType="com.itstyle.common.model.Product">
+        update pay_order
+            set recfeeamt=#{recfeeamt}::decimal,recfeerate=#{recfeerate}::decimal
+        where outtradeno = #{outTradeNo}
+        and status = 2
+    </update>
+
+    <!-- 首页显示日均笔数、交易金额 -->
+    <select id="getOrderSum" resultType="java.util.HashMap">
+        SELECT
+        to_char(po.createtime, 'YYYY-MM-DD') as createdate,
+        COUNT ( po.orderid ) AS ordercounts,
+        SUM ( po.totalfee ) AS totalfee,
+        SUM ( po.recfeeamt ) AS recfeeamt
+        FROM
+        pay_order po
+        WHERE po.status = 2
+        <if test="mchid != null and mchid != ''">
+            AND po.mchid = #{mchid}
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char( po.createtime, 'YYYY-MM-DD' ) BETWEEN #{starttime} AND #{endtime}
+        </if>
+        GROUP BY createdate
+    </select>
+
+    <!-- 首页汇总 -->
+    <select id="getOrderRang" resultType="java.util.HashMap">
+        select '今天' as date,count(*) as ordercnt,COALESCE(round(sum(totalfee::int)/100.0,2),0) as amount from pay_order
+        where status = 2 and createtime between current_date and current_date+interval '1 D'
+        <if test="mchid != null and mchid != ''">
+            and mchid = #{mchid}
+        </if>
+        union all
+        select '昨天',count(*),COALESCE(round(sum(totalfee::int)/100.0,2),0) from pay_order
+        where status = 2 and createtime between current_date-interval '1 D' and current_date
+        <if test="mchid != null and mchid != ''">
+            and mchid = #{mchid}
+        </if>
+        union all
+        select '本周',count(*),COALESCE(round(sum(totalfee::int)/100.0,2),0) from pay_order
+        where status = 2 and createtime between current_date - cast(extract(dow from current_date) as int) + 1 and current_date - cast(extract(dow from current_date) as int) + 7
+        <if test="mchid != null and mchid != ''">
+            and mchid = #{mchid}
+        </if>
+        union all
+        select '上周',count(*),COALESCE(round(sum(totalfee::int)/100.0,2),0) from pay_order
+        where status = 2 and createtime between current_date - cast(extract(dow from current_date) as int) - 6 and current_date - cast(extract(dow from current_date) as int)
+        <if test="mchid != null and mchid != ''">
+            and mchid = #{mchid}
+        </if>
+        union all
+        select '本月',count(*),COALESCE(round(sum(totalfee::int)/100.0,2),0) from pay_order
+        where status = 2 and createtime between date_trunc('month', now())::date and (date_trunc('month', now()) + interval '1 month - 1 day')::date
+        <if test="mchid != null and mchid != ''">
+            and mchid = #{mchid}
+        </if>
+        union all
+        select '上月',count(*),COALESCE(round(sum(totalfee::int)/100.0,2),0) from pay_order
+        where status = 2 and createtime between (date_trunc('month', now()) + interval '- 1 month')::date and (date_trunc('month', now()) + interval '- 1 day')::date
+        <if test="mchid != null and mchid != ''">
+            and mchid = #{mchid}
+        </if>
+    </select>
+
+</mapper>

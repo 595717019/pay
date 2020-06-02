@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itstyle.database.mapper.RefundOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.itstyle.database.domain.po.RefundOrder">
+        <result column="refundorderid" property="refundorderid" />
+        <result column="payorderid" property="payorderid" />
+        <result column="channelpayorderno" property="channelpayorderno" />
+        <result column="mchid" property="mchid" />
+        <result column="mchrefundno" property="mchrefundno" />
+        <result column="channelid" property="channelid" />
+        <result column="payamount" property="payamount" />
+        <result column="refundamount" property="refundamount" />
+        <result column="status" property="status" />
+        <result column="result" property="result" />
+        <result column="clientip" property="clientip" />
+        <result column="device" property="device" />
+        <result column="remarkinfo" property="remarkinfo" />
+        <result column="channeluser" property="channeluser" />
+        <result column="username" property="username" />
+        <result column="channelmchid" property="channelmchid" />
+        <result column="channelerrcode" property="channelerrcode" />
+        <result column="channelerrmsg" property="channelerrmsg" />
+        <result column="extra" property="extra" />
+        <result column="notifyurl" property="notifyurl" />
+        <result column="param1" property="param1" />
+        <result column="param2" property="param2" />
+        <result column="expiretime" property="expiretime" />
+        <result column="refundsucctime" property="refundsucctime" />
+        <result column="createtime" property="createtime" />
+        <result column="updatetime" property="updatetime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        refundorderid, payorderid, channelpayorderno, mchid, mchrefundno, channelid, payamount, refundamount, status, result, clientip, device, remarkinfo, channeluser, username, channelmchid, channelerrcode, channelerrmsg, extra, notifyurl, param1, param2, expiretime, refundsucctime, createtime, updatetime
+    </sql>
+
+    <!-- 查询数据库中的退款订单 -->
+    <select id="selectRefundOrder" resultMap="BaseResultMap">
+        select * from refund_order
+        where 1=1
+        <if test="refundorderid != null and refundorderid != ''">
+            AND refundorderid = #{refundorderid}
+        </if>
+        <if test="mchid != null and mchid != ''">
+            AND mchid = #{mchid}
+        </if>
+        <if test="mchrefundno != null and mchrefundno != ''">
+            AND  mchrefundno = #{mchrefundno}
+        </if>
+        <if test="status != null and status != ''">
+            AND status=#{status}::int
+        </if>
+    </select>
+
+    <!-- 插入退款数据 -->
+    <insert id="insertRefund" parameterType="com.itstyle.database.domain.vo.RefundOrderVO">
+        insert into refund_order(
+            refundorderid,payorderid,channelpayorderno,mchid,mchrefundno
+            ,channelid
+            ,payamount,refundamount,status,result
+            ,clientip,device,remarkinfo,channeluser,username
+            ,channelmchid,channelerrcode,channelerrmsg,extra,notifyurl
+            ,param1,param2,expiretime,refundsucctime,createtime
+            ,updatetime
+        )
+        VALUES(
+            #{refundorderid},#{mchrefundno},#{mchrefundno},#{mchid},#{mchrefundno}
+            ,(select channelid from pay_channel where mchid = #{mchid} and payid = #{payId}::int)
+            ,#{payamount},0,0,0
+            ,'','','','',''
+            ,'','','','',''
+            ,'','',now(),null,now()
+            ,null
+        )
+    </insert>
+
+    <!-- 更新退款数据 -->
+    <update id="updateRefund" parameterType="java.util.HashMap">
+        update refund_order
+            set refundamount=#{refundamount}::int
+            ,updatetime=now()
+            ,refundsucctime=#{refundsucctime}::timestamp
+            ,status=2
+        where refundorderid=#{refundorderid}
+    </update>
+
+</mapper>

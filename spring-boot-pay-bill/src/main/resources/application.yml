@@ -1,0 +1,87 @@
+# tomcat配置
+server:
+  port: 8081
+  servlet:
+    context-path: /bill
+  tomcat:
+    uri-encoding: UTF-8
+
+# 自定义配置
+#com:
+#  tre:
+#    jdev:
+#      add-path-patterns: /**
+#      exclude-path-patterns: /user/login/**,/upload/**,/static/**
+#      token-category: JWT      # JWT default,REDIS
+#      refresh-token: FALSE  # interceptor是REDIS的场合 (FALSE: 期限内不重新发放新Token， TRUE： 期限内重新发放新Token)
+#      pre-user-issuer: jdev   # 签发人
+#      pre-user-subject: ai    # 系统服务
+#      token-expire: 7200000       # Token过期时间 默认毫秒
+#      token-security-key: 46cc793c53dc451b8a4fe2cd0bb008471
+
+# 数据库密码加密・配置
+jasypt:
+  encryptor:
+    password: true
+
+# PageHelper 分页插件
+#数据库类型 (PostgreSQL, SqlServer [支持2005,2008], SqlServer2012, Mysql, Oracle, MariaDB)
+pagehelper:
+  helper-dialect: PostgreSQL
+  reasonable: false
+  support-methods-arguments: true
+  params: count=countSql
+
+# XSS防护
+xss:
+  enabled: false #是否启用： (false, true)
+  excludes:
+  url-patterns: /*
+  white-list: none  #防护策略： (none, relaxed, basic, simpleText, basicWithImages)
+
+# http and druid・配置
+spring:
+  profiles:
+    active: product
+  http:
+    encoding:
+      enabled: true
+      force: true
+      charset: utf-8
+  jmx:
+    enabled: false
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    tomcat:
+      max-active: 100
+      initial-size: 10
+      max-wait: 60000
+      min-idle: 10
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: select 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      thymeleaf:
+        cache: false
+        servlet:
+          content-type: text/html
+        encoding: utf-8
+        prefix: classpath:/templates/
+        suffix: .html
+  mail:
+    host: cn.tre-inc.com
+    username: xxxxxxxxx@cn.tre-inc.com  //邮件账号地址
+    ##ENC(password)
+    password: ENC(password)             //邮件账号密码，ENC加密处理
+    default-encoding: UTF-8
+    protocol: smtp
+
+# mybatis-plus
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.tre.bill.domain.po
+
+
+

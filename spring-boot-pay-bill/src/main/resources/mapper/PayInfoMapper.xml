@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tre.bill.mapper.PayInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.tre.bill.domain.po.PayInfo">
+        <id column="payid" property="payid" />
+        <result column="name" property="name" />
+        <result column="state" property="state" />
+        <result column="createtime" property="createtime" />
+        <result column="updatetime" property="updatetime" />
+        <result column="paytype" property="paytype" />
+        <result column="descript" property="descript" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        payid, name, state, createtime, updatetime, paytype, descript
+    </sql>
+
+</mapper>

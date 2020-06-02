@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tre.bill.mapper.ZgznBillMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.tre.bill.domain.po.ZgznBill">
+        <result column="mchid" property="mchid" />
+        <result column="orderid" property="orderid" />
+        <result column="outtradeno" property="outtradeno" />
+        <result column="channelid" property="channelid" />
+        <result column="totalfee" property="totalfee" />
+        <result column="recfeeamt" property="recfeeamt" />
+        <result column="recfeerate" property="recfeerate" />
+        <result column="status" property="status" />
+        <result column="createtime" property="createtime" />
+        <result column="paysucctime" property="paysucctime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        mchid, orderid, outtradeno, channelid, totalfee, recfeeamt, recfeerate, status, createtime, paysucctime
+    </sql>
+
+</mapper>

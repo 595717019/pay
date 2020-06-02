@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tre.bill.mapper.BillMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.tre.bill.domain.dto.BillInfo">
+        <id column="mchid" property="mchid"/>
+        <result column="zgznDate" property="zgzn_date"/>
+        <result column="zgznOrdercnt" property="zgzn_ordercnt"/>
+        <result column="zgznAmount" property="zgzn_amount"/>
+        <result column="payOrdercnt" property="pay_ordercnt"/>
+        <result column="payAmount" property="pay_amount"/>
+        <result column="suixingpayOrdercnt" property="suixingpay_ordercnt"/>
+        <result column="suixingpayAmount" property="suixingpay_amount"/>
+
+    </resultMap>
+
+    <!-- 掌柜智囊，支付平台，随行付数据 -->
+    <select id="getBillData" resultType="java.util.HashMap">
+        with t_zgzn as (
+        select
+            to_char(createtime,'yyyy/MM/dd') as zgzn_date,count(*) as zgzn_ordercnt,sum(totalfee) as zgzn_amount
+        from zgzn_bill zb
+        where 1=1
+        <if test="mchid != null and mchid != ''">
+            AND mchid=#{mchid}
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char(createtime,'yyyy-mm-dd') BETWEEN #{starttime} AND #{endtime}
+        </if>
+        group by to_char(createtime,'yyyy/MM/dd')
+        order by to_char(createtime,'yyyy/MM/dd') desc
+        ), t_suixingpay as (
+        select
+            to_char(createtime,'yyyy/MM/dd') as suixingpay_date,count(*)as suixingpay_ordercnt,sum(totalfee) as suixingpay_amount
+        from suixingpay_bill
+        where 1=1
+        <if test="mchid != null and mchid != ''">
+            AND mchid=#{mchid}
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char(createtime,'yyyy-mm-dd') BETWEEN #{starttime} AND #{endtime}
+        </if>
+        group by to_char(createtime,'yyyy/MM/dd')
+        order by to_char(createtime,'yyyy/MM/dd') desc
+        ), t_pay_order as (
+        select
+            to_char(createtime,'yyyy/MM/dd') as pay_date,count(*) as pay_ordercnt,round(sum(totalfee)/100,2) as pay_amount
+        from pay_order
+        where status = 2
+        <if test="mchid != null and mchid != ''">
+            AND mchid=#{mchid}
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char(createtime,'yyyy-mm-dd') BETWEEN #{starttime} AND #{endtime}
+        </if>
+        group by to_char(createtime,'yyyy/MM/dd')
+        order by to_char(createtime,'yyyy/MM/dd') desc
+        )
+
+        select p.pay_date,zgzn_ordercnt,zgzn_amount,pay_ordercnt,pay_amount,suixingpay_ordercnt,suixingpay_amount
+        from t_zgzn z
+        full join t_pay_order p
+        on z.zgzn_date = p.pay_date
+        full join t_suixingpay s
+        on p.pay_date = s.suixingpay_date
+        order by p.pay_date desc
+    </select>
+
+    <!-- 对账管理 -->
+    <select id="getExceptionBillData" resultType="java.util.HashMap">
+        select
+            b.mchid,b.mchname,b.orderid,b.outtradeno,b.source,b.channelid
+            ,b.totalfee,b.remark
+            , to_char(b.createtime,'YYYY-MM-DD HH24:MI:SS') as createtime
+            , to_char(b.paytime,'YYYY-MM-DD HH24:MI:SS') as paytime
+            , to_char(b.paysucctime,'YYYY-MM-DD HH24:MI:SS') as paysucctime
+            ,case
+                when pc.payid =1 and pi.paytype = 1 then '支付宝'
+                when pc.payid =2 and pi.paytype = 2 then '微信'
+                when pc.payid =3 and pi.paytype = 1 then 'Xorpay支付宝'
+                when pc.payid =4 and pi.paytype = 2 then 'Xorpay微信'
+                when pc.payid =5 and pi.paytype = 1 then '随行付支付宝'
+                when pc.payid =6 and pi.paytype = 2 then '随行付微信'
+                when pc.payid =7 and pi.paytype = 3 then '随行付银联'
+            end as channelname
+            ,b.status
+            ,case b.status
+                when 0 then '成功'
+                else '失败'
+            end as statusname
+        from bill b
+        LEFT JOIN pay_channel pc on b.channelid = pc.channelid
+        LEFT JOIN pay_info pi ON pc.payid=pi.payid
+        where 1=1
+        <if test="mchid != null and mchid != ''">
+            AND b.mchid=#{mchid}
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char(b.paytime,'yyyy-mm-dd') BETWEEN #{starttime} AND #{endtime}
+        </if>
+        <if test="source != null and source != ''">
+            AND b.source=#{source}
+        </if>
+        order by b.paytime desc
+    </select>
+
+    <!-- 异常数据修改 -->
+    <update id="updateExceptionBillData" parameterType="java.util.HashMap">
+        update bill
+            set remark=#{remark},updatetime=now()
+        where 1=1
+        <if test="mchid != null and mchid != ''">
+            AND mchid=#{mchid}
+        </if>
+        and to_char(paytime,'YYYY-MM-DD HH24:MI:SS')=#{paytime}
+        and outtradeno= #{outtradeno}
+    </update>
+
+</mapper>

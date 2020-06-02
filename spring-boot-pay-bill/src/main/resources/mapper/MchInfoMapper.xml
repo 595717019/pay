@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tre.bill.mapper.MchInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.tre.bill.domain.po.MchInfo">
+        <id column="mchid" property="mchid" />
+        <result column="mchname" property="mchname" />
+        <result column="username" property="username" />
+        <result column="mchlevel" property="mchlevel" />
+        <result column="operater" property="operater" />
+        <result column="state" property="state" />
+        <result column="registermchname" property="registermchname" />
+        <result column="registerno" property="registerno" />
+        <result column="registerusername" property="registerusername" />
+        <result column="registerperiod" property="registerperiod" />
+        <result column="registeridcard" property="registeridcard" />
+        <result column="registeridcardtype" property="registeridcardtype" />
+        <result column="phone" property="phone" />
+        <result column="registeridcardperiod" property="registeridcardperiod" />
+        <result column="mchaddress" property="mchaddress" />
+        <result column="mchtype" property="mchtype" />
+        <result column="settlementidcard" property="settlementidcard" />
+        <result column="settlementusername" property="settlementusername" />
+        <result column="settlementaddress" property="settlementaddress" />
+        <result column="settlementtype" property="settlementtype" />
+        <result column="settlementcardno" property="settlementcardno" />
+        <result column="settlementperiod" property="settlementperiod" />
+        <result column="createtime" property="createtime" />
+        <result column="updatetime" property="updatetime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        mchid, mchname, username, mchlevel, operater, state, registermchname, registerno, registerusername, registerperiod, registeridcard, registeridcardtype, phone, registeridcardperiod, mchaddress, mchtype, settlementidcard, settlementusername, settlementaddress, settlementtype, settlementcardno, settlementperiod, createtime, updatetime
+    </sql>
+
+</mapper>

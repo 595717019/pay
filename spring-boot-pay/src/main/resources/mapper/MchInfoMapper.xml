@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itstyle.database.mapper.MchInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.itstyle.database.domain.po.MchInfo">
+        <id column="mchid" property="mchid"/>
+        <result column="mchname" property="mchname"/>
+        <result column="username" property="username"/>
+        <result column="mchlevel" property="mchlevel"/>
+        <result column="operater" property="operater"/>
+        <result column="state" property="state"/>
+        <result column="registermchname" property="registermchname"/>
+        <result column="registerno" property="registerno"/>
+        <result column="registerusername" property="registerusername"/>
+        <result column="registerperiod" property="registerperiod"/>
+        <result column="registeridcard" property="registeridcard"/>
+        <result column="registeridcardtype" property="registeridcardtype"/>
+        <result column="phone" property="phone"/>
+        <result column="registeridcardperiod" property="registeridcardperiod"/>
+        <result column="mchaddress" property="mchaddress"/>
+        <result column="mchtype" property="mchtype"/>
+        <result column="settlementidcard" property="settlementidcard"/>
+        <result column="settlementusername" property="settlementusername"/>
+        <result column="settlementaddress" property="settlementaddress"/>
+        <result column="settlementtype" property="settlementtype"/>
+        <result column="settlementcardno" property="settlementcardno"/>
+        <result column="settlementperiod" property="settlementperiod"/>
+        <result column="createtime" property="createtime"/>
+        <result column="updatetime" property="updatetime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        mchid, mchname, username, mchlevel, operater, state, registermchname, registerno, registerusername, registerperiod, registeridcard, registeridcardtype, phone, registeridcardperiod, mchaddress, mchtype, settlementidcard, settlementusername, settlementaddress, settlementtype, settlementcardno, settlementperiod, createtime, updatetime
+    </sql>
+
+    <resultMap id="MachinfoMap" type="com.itstyle.database.domain.dto.MachinfoDTO">
+        <id column="mchid" property="mchid"/>
+        <result column="mchname" property="mchname"/>
+        <result column="username" property="username"/>
+        <result column="mchlevel" property="mchlevel"/>
+        <result column="operater" property="operater"/>
+        <result column="state" property="state"/>
+        <result column="registermchname" property="registermchname"/>
+        <result column="registerno" property="registerno"/>
+        <result column="registerusername" property="registerusername"/>
+        <result column="registerperiod" property="registerperiod"/>
+        <result column="registeridcard" property="registeridcard"/>
+        <result column="registeridcardtype" property="registeridcardtype"/>
+        <result column="phone" property="phone"/>
+        <result column="registeridcardperiod" property="registeridcardperiod"/>
+        <result column="mchaddress" property="mchaddress"/>
+        <result column="mchtype" property="mchtype"/>
+        <result column="settlementidcard" property="settlementidcard"/>
+        <result column="settlementusername" property="settlementusername"/>
+        <result column="settlementaddress" property="settlementaddress"/>
+        <result column="settlementtype" property="settlementtype"/>
+        <result column="settlementcardno" property="settlementcardno"/>
+        <result column="settlementperiod" property="settlementperiod"/>
+        <result column="createtime" property="createtime"/>
+        <result column="updatetime" property="updatetime"/>
+        <collection property="payChannels" ofType="com.itstyle.database.domain.dto.PayChannelDTO">
+            <id column="channelid" property="channelid"/>
+            <result column="payid" property="payid"/>
+            <result column="payname" property="payname"/>
+            <result column="tradetype" property="tradetype"/>
+            <result column="channelstate" property="channelstate"/>
+        </collection>
+    </resultMap>
+
+    <!-- 商户列表 -->
+    <select id="listAll" resultMap="BaseResultMap">
+        select * from mch_info
+    </select>
+
+    <!-- 支付路由 -->
+    <select id="payinfo" parameterType="com.itstyle.common.model.Product" resultType="java.util.HashMap">
+        select * from pay_info i
+        join pay_channel c
+        on i.payid = c.payid
+        where c.state = 1 and c.mchid = #{mchid}
+        <if test="payType != null">
+            AND paytype = #{payType}::int
+        </if>
+        limit 1
+    </select>
+
+    <!-- 订单路由，根据商户和订单，查询当前订单属于哪个第三方 -->
+    <select id="orderRoute" parameterType="com.itstyle.common.model.Product" resultType="java.util.HashMap">
+        select
+        po.orderid,po.mchid,po.outtradeno,po.payid,po.channelid,pc.tradetype,pc.apptoken
+        ,pi.name,pi.descript
+        from pay_info pi
+        join pay_channel pc on pi.payid = pc.payid
+        join pay_order po on po.mchid=pc.mchid and po.channelid = pc.channelid
+        where 1=1
+        <if test="outTradeNo != null and outTradeNo != ''">
+            and po.outtradeno=#{outTradeNo}
+        </if>
+        <if test="mchid != null and mchid != ''">
+            and po.mchid = #{mchid}
+        </if>
+        limit 1
+    </select>
+
+    <!-- 退款订单路由 -->
+    <select id="refundOrderRoute" parameterType="com.itstyle.common.model.Product" resultType="java.util.HashMap">
+        select
+        po.orderid,po.mchid,po.outtradeno,po.payid,po.channelid,pc.tradetype,pc.apptoken
+        ,pi.name,pi.descript,ro.refundorderid
+        from pay_info pi
+        join pay_channel pc on pi.payid = pc.payid
+        join pay_order po on po.mchid=pc.mchid and po.channelid = pc.channelid
+        join refund_order ro on ro.mchrefundno=po.outtradeno and ro.mchid=pc.mchid
+        where 1=1
+        <if test="refundorderid != null and refundorderid != ''">
+            and ro.refundorderid=#{refundorderid}
+        </if>
+        <if test="mchid != null and mchid != ''">
+            and ro.mchid = #{mchid}
+        </if>
+        limit 1
+    </select>
+
+    <!-- 商户列表 -->
+    <select id="getMchInfoList" resultType="java.util.HashMap">
+        select
+        mi.mchid, mi.mchname, mi.username
+        , case mi.mchlevel when 1 then '普通' when 2 then '小微' else '未知' end as mchlevel
+        , mi.operater,mi.state
+        , case mi.state when 1 then '使用中' else '停止使用' end as statename
+        , mi.registermchname, mi.registerno, mi.registerusername, mi.registerperiod
+        , mi.registeridcard, mi.registeridcardtype, mi.phone, mi.registeridcardperiod, mi.mchaddress, mi.mchtype,
+        mi.settlementidcard, mi.settlementusername
+        , mi.settlementaddress, mi.settlementtype, mi.settlementcardno, mi.settlementperiod
+        , to_char(mi.createtime,'YYYY-MM-DD HH24:MI:SS') as createtime, to_char(mi.updatetime,'YYYY-MM-DD HH24:MI:SS')
+        as updatetime
+        from mch_info mi
+        where 1=1
+        <if test="mchid != null and mchid != ''">
+            AND mi.mchid=#{mchid}
+        </if>
+        <if test="mchname != null and mchname != ''">
+            AND mi.mchname like '%'||#{mchname}||'%'
+        </if>
+        <if test="username != null and username != ''">
+            AND mi.username=#{username}
+        </if>
+        <if test="mchlevel != null and mchlevel != ''">
+            AND mi.mchlevel=#{mchlevel}::int
+        </if>
+        <if test="operater != null and operater != ''">
+            AND mi.operater=#{operater}
+        </if>
+        <if test="state != null">
+            AND mi.state=#{state}::int
+        </if>
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            AND to_char(mi.createtime,'yyyy-mm-dd') BETWEEN #{starttime} AND #{endtime}
+        </if>
+    </select>
+
+    <!-- 商户详情 -->
+    <select id="getStoreDetail" parameterType="String" resultMap="MachinfoMap">
+        select
+        mi.mchid, mi.mchname, mi.username
+        , case mi.mchlevel when 1 then '普通' when 2 then '小微' else '未知' end as mchlevel
+        , mi.operater, mi.state, case mi.state when 1 then '使用中' else '停止使用' end as statename
+        ,mi.registermchname, mi.registerno, mi.registerusername, mi.registerperiod
+        , mi.registeridcard, mi.registeridcardtype, mi.phone, mi.registeridcardperiod, mi.mchaddress, mi.mchtype
+        , mi.settlementidcard, mi.settlementusername
+        , mi.settlementaddress, mi.settlementtype, mi.settlementcardno, mi.settlementperiod
+        , to_char(mi.createtime,'YYYY-MM-DD HH24:MI:SS') as createtime, to_char(mi.updatetime,'YYYY-MM-DD HH24:MI:SS')
+        as updatetime
+        ,pc.channelid,pc.payid
+        ,case
+        when pc.payid =1 and pi.paytype = 1 then '支付宝'
+        when pc.payid =2 and pi.paytype = 2 then '微信'
+        when pc.payid =3 and pi.paytype = 1 then 'Xorpay支付宝'
+        when pc.payid =4 and pi.paytype = 2 then 'Xorpay微信'
+        when pc.payid =5 and pi.paytype = 1 then '随行付支付宝'
+        when pc.payid =6 and pi.paytype = 2 then '随行付微信'
+        when pc.payid =7 and pi.paytype = 3 then '随行付银联'
+        end as payname
+        ,pc.tradetype,pc.state as channelstate
+        from mch_info mi
+        left join pay_channel pc on mi.mchid=pc.mchid
+        left join pay_info pi ON pc.payid=pi.payid
+        where 1=1
+        <if test="_parameter != null">
+            AND mi.mchid=#{mchid}
+        </if>
+    </select>
+
+    <!-- 商户下拉列表 -->
+    <select id="getMchList" resultType="java.util.HashMap">
+        select
+            mchid as id,mchname as name
+        from mch_info
+        ORDER BY mchid
+    </select>
+
+    <!-- 新增商户 -->
+    <insert id="insert" parameterType="com.itstyle.database.domain.po.MchInfo">
+        insert into mch_info(
+            mchid,mchname,username,mchlevel,operater
+            ,state,registermchname,registerno,registerusername,registerperiod
+            ,registeridcard,registeridcardtype,phone,registeridcardperiod,mchaddress
+            ,mchtype,settlementidcard,settlementusername,settlementaddress,settlementtype
+            ,settlementcardno,settlementperiod,createtime,updatetime
+        )
+        VALUES(
+            #{mchid}, #{mchname}, #{username}, #{mchlevel}, #{operater}
+            ,1, #{registermchname}, #{registerno}, #{registerusername}, #{registerperiod}
+            ,#{registeridcard}, #{registeridcardtype}, #{phone}, #{registeridcardperiod}, #{mchaddress}
+            ,#{mchtype}, #{settlementidcard}, #{settlementusername}, #{settlementaddress}, #{settlementtype}
+            ,#{settlementcardno}, #{settlementperiod}, now(), now()
+        )
+    </insert>
+
+</mapper>

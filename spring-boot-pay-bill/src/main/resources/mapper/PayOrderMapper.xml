@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tre.bill.mapper.PayOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.tre.bill.domain.po.PayOrder">
+        <result column="orderid" property="orderid" />
+        <result column="mchid" property="mchid" />
+        <result column="outtradeno" property="outtradeno" />
+        <result column="channelid" property="channelid" />
+        <result column="totalfee" property="totalfee" />
+        <result column="status" property="status" />
+        <result column="clientip" property="clientip" />
+        <result column="payway" property="payway" />
+        <result column="subject" property="subject" />
+        <result column="body" property="body" />
+        <result column="extra" property="extra" />
+        <result column="errcode" property="errcode" />
+        <result column="errmsg" property="errmsg" />
+        <result column="param1" property="param1" />
+        <result column="param2" property="param2" />
+        <result column="notifyurl" property="notifyurl" />
+        <result column="notifycount" property="notifycount" />
+        <result column="lastnotifytime" property="lastnotifytime" />
+        <result column="expiretime" property="expiretime" />
+        <result column="paysucctime" property="paysucctime" />
+        <result column="createtime" property="createtime" />
+        <result column="updatetime" property="updatetime" />
+        <result column="payid" property="payid" />
+        <result column="recfeeamt" property="recfeeamt" />
+        <result column="recfeerate" property="recfeerate" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        orderid, mchid, outtradeno, channelid, totalfee, status, clientip, payway, subject, body, extra, errcode, errmsg, param1, param2, notifyurl, notifycount, lastnotifytime, expiretime, paysucctime, createtime, updatetime, payid, recfeeamt, recfeerate
+    </sql>
+
+</mapper>

@@ -1,0 +1,50 @@
+# 数据库配置
+spring:
+  datasource:
+    url: jdbc:postgresql://47.105.124.238:5432/pay
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: ENC(B7LRy+Dl12QUDYBbK6h9kg==)
+
+  #启动Spring MVC多文件上传
+  servlet:
+    fileName: suixingpay_trade.csv #随行付对账单csv文件名字
+    multipart:
+      enabled: true
+      file-size-threshold: 0
+      location: /home/bill/suixingpay #指定默认上传的文件夹
+      max-file-size: 5MB      #限制单个文件最大大小
+      max-request-size: 20MB  #限制所有文件最大大小
+      resolve-lazily: false   #是否延迟多部件文件请求的参数和文件的解析
+
+  #Redis
+#  redis:
+#    host: xxx.xxx.xxx.xxx
+#    port: 6379
+#    database: 0   #Redis数据库索引（默认为0）
+#    password:
+#    timeout: 1000 # 连接超时时间（毫秒）
+#    #Lettuce
+#    lettuce:
+#      pool:
+#        max-active: 8         # 连接池最大连接数（使用负值表示没有限制）
+#        max-wait: 10000       # 连接池最大阻塞等待时间（使用负值表示没有限制）
+#        max-idle: 8           # 连接池中的最大空闲连接
+#        min-idle: 0           # 连接池中的最小空闲连接
+#      shutdown-timeout: 100   # 关闭超时时间
+
+#mybatis-plus
+mybatis-plus:
+  configuration:
+    cache-enabled: true
+    lazy-loading-enabled: true
+    multiple-result-sets-enabled: true
+    use-column-label: true
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true
+    jdbc-type-for-null: null
+#    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# 日志配合·标准
+logging:
+  config: classpath:logback-spring-product.xml
